@@ -21,6 +21,8 @@ class ProductCell: UITableViewCell {
     @IBOutlet weak var priceLbl: UILabel!
     @IBOutlet weak var selectedQuantityLbl: UILabel!
     @IBOutlet weak var quantityModifierView: UIView!
+    @IBOutlet weak var addButton: UIButton!
+    @IBOutlet weak var removeButton: UIButton!
     
     weak var delegate: ProductCellDelegate?
     
@@ -41,7 +43,7 @@ class ProductCell: UITableViewCell {
     }
     
     func reload(with product: ProductModel) {
-        //TODO: reload images are not correct when reloading list after changing quantity
+        //TODO: reload images are not correct when reloading list after changing quantity - DONE!
         setImage(from: product.thumbnail)
         prodTitleLbl.text = product.title
         stockLbl.text = "\(product.stock)"
@@ -51,7 +53,6 @@ class ProductCell: UITableViewCell {
     }
     
     private func setImage(from url: String) {
-        
         NetworkManager.shared.downloadImage(from: url) { [weak self] image in
             DispatchQueue.main.async {
                 self?.prodImageView.image = image

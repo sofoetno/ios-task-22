@@ -12,6 +12,8 @@ final class NetworkManager {
     
     static let shared = NetworkManager()
     
+    private let cache = NSCache<NSURL, UIImage>()
+    
     private init() {}
     
     // MARK: - Fetch Movies
@@ -45,22 +47,28 @@ final class NetworkManager {
     
     // MARK: - Download Image
     func downloadImage(from urlString: String, completion: @escaping (UIImage?) -> Void) {
+            
         guard let url = URL(string: urlString) else {
             completion(nil)
             return
         }
         
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            guard 
-                let data,
-                error == nil,
-                let image = UIImage(data: data)
-            else {
-                completion(nil)
-                return
-            }
-            
-            completion(image)
-        }.resume()
+        if let cachedImage = cache.object(forKey: url as NSURL) {
+            completion(cachedImage)
+        } else {
+            URLSession.shared.dataTask(with: url) { data, response, error in
+                guard
+                    let data,
+                    error == nil,
+                    let image = UIImage(data: data)
+                else {
+                    completion(nil)
+                    return
+                }
+                
+                self.cache.setObject(image, forKey: url as NSURL)
+                completion(image)
+            }.resume()
+        }
     }
 }

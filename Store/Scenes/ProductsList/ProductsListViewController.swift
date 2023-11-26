@@ -55,6 +55,8 @@ class ProductsListViewController: UIViewController {
     func setupTableView() {
         view.addSubview(productsTableView)
         
+        productsTableView.allowsMultipleSelection = true
+        
         NSLayoutConstraint.activate([
             productsTableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             productsTableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -100),
@@ -63,6 +65,9 @@ class ProductsListViewController: UIViewController {
         ])
         
         productsTableView.register(UINib(nibName: "ProductCell", bundle: nil), forCellReuseIdentifier: "ProductCell")
+        
+        productsTableView.delegate = self
+        productsTableView.dataSource = self
     }
     
     func setupIndicator() {
@@ -94,7 +99,7 @@ class ProductsListViewController: UIViewController {
 extension ProductsListViewController: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        10
+        productsViewModel.products?.count ?? 0
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -112,14 +117,20 @@ extension ProductsListViewController: UITableViewDataSource, UITableViewDelegate
 }
 
 extension ProductsListViewController: ProductsListViewModelDelegate {
+    func showError(error: Error) {
+        print(error)
+    }
+    
     
     func productsAmountChanged() {
         totalPriceLbl.text = "Total price: \(productsViewModel.totalPrice ?? 0)"
     }
     
     func productsFetched() {
-        self.activityIndicator.stopAnimating()
-        self.productsTableView.reloadData()
+        DispatchQueue.main.async {
+            self.activityIndicator.stopAnimating()
+            self.productsTableView.reloadData()
+        }
     }
 }
 
@@ -127,13 +138,15 @@ extension ProductsListViewController: ProductCellDelegate {
     
     func removeProduct(for cell: ProductCell) {
         if let indexPath = productsTableView.indexPath(for: cell) {
-            productsViewModel.removeProduct(at: indexPath.row + 1)
+            productsViewModel.removeProduct(at: indexPath.row)
+            productsTableView.reloadData()
         }
     }
     
     func addProduct(for cell: ProductCell) {
         if let indexPath = productsTableView.indexPath(for: cell) {
-            productsViewModel.addProduct(at: indexPath.row + 1)
+            productsViewModel.addProduct(at: indexPath.row)
+            productsTableView.reloadData()
         }
     }
 }
